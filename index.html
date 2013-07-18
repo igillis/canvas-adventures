@@ -1,0 +1,47 @@
+<head>
+	<style type="text/css">
+		#myCanvas {
+			border: 2px solid #000;
+			margin-left: 100px;
+		}
+	</style>
+	<script>
+	</script>
+</head>
+<div>
+	<canvas id="myCanvas" width="1000" height="500"></canvas>
+	<script>
+		var canvas = document.getElementById('myCanvas');
+		var context = canvas.getContext('2d');
+
+		function drawLine(x1, y1, x2, y2) {
+			canvas.width = canvas.width;
+			context.moveTo(x1, y1);
+			context.lineTo(x2, y2);
+			context.stroke();
+		}
+
+		var radius = 200;
+		var center = {x: 250, y: 250};
+		function updatePoints(i, r, p) {
+			if (i == 90 || i == 270) return p;
+			var tan = Math.tan(i * Math.PI / 180);
+			var tan_squared = Math.pow(tan, 2);
+			var x = Math.sqrt(Math.pow(r, 2) / (tan_squared+1));
+			var y = x * tan;
+
+			if (i > 90 && i < 270) {
+				x = -x;
+				y = -y;
+			}
+
+			return {x: x + p.x , y: y + p.y} ;
+		}
+		
+		for (var i = 0; i < 360; i+=.01) {
+			var new_point = updatePoints(i, radius, center);
+			setTimeout(drawLine, 10*i, new_point.x, new_point.y, center.x, center.y);
+		}
+
+	</script>
+</div>
