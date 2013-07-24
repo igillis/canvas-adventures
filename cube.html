@@ -1,0 +1,137 @@
+<head>
+	<style type="text/css">
+		#myCanvas {
+			border: 2px solid #000;
+			margin-left: 100px;
+		}
+	</style>
+	<script>
+	</script>
+</head>
+<div>
+	<canvas id="myCanvas" width="500" height="400"></canvas>
+	<script>
+		var canvas = document.getElementById('myCanvas');
+		var context = canvas.getContext('2d');
+
+		var focal_length = 650;
+		var e_x = canvas.width / 2;
+		var e_y = canvas.height / 2;
+
+		function Point2D(x, y) {
+			this.x = x;
+			this.y = y;
+		}
+
+		function Point3D(x, y, z, name) {
+			this.x = x;
+			this.y = y;
+			this.z = z;
+			this.name = name;
+
+			this.project = function() {
+				foc_z = focal_length + this.z;
+				var p_x = (focal_length * (this.x - e_x) / foc_z) + e_x;
+				var p_y = (focal_length * (this.y - e_y) / foc_z) + e_y;
+				return new Point2D(p_x, p_y);
+			}
+
+			this.rotateY = function(theta, x_off, y_off, z_off) {
+				var sin_t = Math.sin(theta);
+				var cos_t = Math.cos(theta);
+				var x = this.x - x_off;
+				var z = this.z - z_off;
+				var new_x = cos_t * x + sin_t * z;
+				var new_z = cos_t * z - sin_t * x;
+				this.x = new_x + x_off;
+				this.z = new_z + z_off;
+			}
+
+			this.rotateZ = function(theta, x_off, y_off, z_off) {
+				var cos_t = Math.cos(theta);
+				var sin_t = Math.sin(theta);
+				var x = this.x - x_off;
+				var y = this.y - y_off;
+				var new_x = x * cos_t - y * sin_t;
+				var new_y = x * sin_t + y* cos_t;
+				this.x = new_x + x_off;
+				this.y = new_y + y_off;
+			}
+
+			this.rotateX = function(theta, x_off, y_off, z_off) {
+				var cos_t = Math.cos(theta);
+				var sin_t = Math.sin(theta);
+				var y = this.y - y_off;
+				var z = this.z - z_off;
+				var new_y = cos_t * y - sin_t * z;
+				var new_z = sin_t * y + cos_t * z;
+				this.y = new_y + y_off;
+				this.z = new_z + z_off;
+			}
+		}
+
+		function drawLine(p1, p2) {
+			context.moveTo(p1.x, p1.y);
+			context.lineTo(p2.x, p2.y);
+		}
+
+		function draw3DLine(p1 ,p2) {
+			p1_p = p1.project();
+			p2_p = p2.project();
+			drawLine(p1_p, p2_p);
+		}
+
+		function Face(p1, p2, p3, p4) {
+			this.points = [p1, p2, p3, p4];
+
+			this.draw = function() {
+				for (var i = 0; i < this.points.length; i++) {
+					draw3DLine(this.points[i], this.points[(i+1) % 4]);
+				}
+			}
+
+			this.rotate = function(theta, rot_fun) {
+				for (var i = 0; i < this.points.length; i++) {
+					this.points[i][rot_fun](theta, center.x, center.y, center.z);
+				}
+			}
+		}
+	  
+		var p = 20;
+		var length = 300;
+		var z = 700;
+		var p1 = new Point3D(p, p, z, 'p1');
+		var p2 = new Point3D(p+length, p, z, 'p2');
+		var p3 = new Point3D(p+length, p+length, z, 'p3');
+		var p4 = new Point3D(p, p+length, z, 'p4');
+		var p5 = new Point3D(p, p, z+length, 'p5');
+		var p6 = new Point3D(p+length, p, z+length, 'p6');
+		var p7 = new Point3D(p+length, p+length, z+length, 'p7');
+		var p8 = new Point3D(p, p+length, z+length, 'p8');
+		var center = {
+			x: p1.x + Math.abs(p1.x - p7.x) / 2,
+			y: p1.y + Math.abs(p1.y - p7.y) / 2,
+			z: p1.z + Math.abs(p1.z - p7.z) / 2,
+		};
+		var f1 = new Face(p1, p2, p3, p4);
+		var f2 = new Face(p1, p5, p8, p4);
+		var f3 = new Face(p2, p6, p7, p3);
+		var f4 = new Face(p5, p6, p7, p8);
+
+		function rotateCube() {
+			canvas.width = canvas.width;
+			f1.rotate(1 * Math.PI / 180, 'rotateZ');
+			f4.rotate(1 * Math.PI / 180, 'rotateZ');
+			f1.rotate(1 * Math.PI / 180, 'rotateX');
+			f4.rotate(1 * Math.PI / 180, 'rotateX');
+			f1.draw();
+			f2.draw();
+			f3.draw();
+			f4.draw();
+			context.stroke();
+			window.webkitRequestAnimationFrame(rotateCube);
+		}
+		rotateCube();
+
+	</script>
+</div>
